@@ -47,4 +47,4 @@ class Emotion:
         self.Arousal = clamp(self.Arousal)
         self.Valence = clamp(self.Valence)
 
-        print(f"Estres: {self.stress} Arousal: {self.Arousal} Valence: {self.Valence}")
+        # print(f"Estres: {self.stress} Arousal: {self.Arousal} Valence: {self.Valence}")
