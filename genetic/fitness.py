@@ -1,11 +1,9 @@
 from models.emotion import Emotion
-from fuzzy.fuzzifier import fuzzify_arousal, fuzzify_valence
-from fuzzy.rules import evaluate_rules, normalize_actions
-from fuzzy.inference import choose_action
-from main import build_environment_timeline
+from fuzzy.engine import process_fuzzy_logic
+from cli_test import build_environment_timeline
 
 # ==========================================
-# FITNESS FUNCTION)
+# EVALUADOR DEL DESEMPEÑO (FITNESS FUNCTION)
 # ==========================================
 # Aquí es donde se juzga si un NPC sobrevivirá a la selección natural.
 # Usamos el Patrón de Diseño "Factory" (Fábrica): Dependiendo de qué "palabra" le
@@ -37,15 +35,10 @@ def get_fitness_evaluator(personality_type="normal"):
             # El NPC actualiza sus emociones basado en sus "genes"
             emotion.update(env, genome)
             
-            # LÓGICA DIFUSA: Transforma sus niveles a palabras (mucho/poco)
-            af = fuzzify_arousal(emotion.Arousal)
-            vf = fuzzify_valence(emotion.Valence)
+            # 4. Invocamos al motor de Lógica Difusa centralizado
+            decision, _ = process_fuzzy_logic(emotion)
             
-            # LÓGICA DIFUSA: Decide qué hacer usando la base de reglas
-            actions = normalize_actions(evaluate_rules(af, vf))
-            decision = choose_action(actions)
-            
-            # 4. PASO CRITICO: Le preguntamos al juez qué opina de esa decisión.
+            # 5. PASO CRITICO: Le preguntamos al juez qué opina de esa decisión.
             score += scoring_logic(phase, env, emotion, decision)
             
         return score
