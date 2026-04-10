@@ -8,11 +8,21 @@ import time
 from collections import Counter
 
 params = {
-    "w1": 0.55, "w2": 0.45, "w3": 0.25, "w4": 0.2,
-    "w5": 0.95, "w6": 0.45, "w7": 0.25, "w8": 0.12,
-    "k1": 0.3, "k2": 0.2, "k3": 0.2,
-    "dA": 0.6, "dV": 0.3, "ds": 0.15,
-}
+        "w1": 0.7413104201667432,
+        "w2": 0.08276221119907848,
+        "w3": 0.012461855765321439,
+        "w4": 0.21704476675438203,
+        "w5": 0.8199247007109596,
+        "w6": 0.4737650235532931,
+        "w7": 0.3436643765122384,
+        "w8": 0.21460749287341574,
+        "k1": 0.5870543041059664,
+        "k2": 0.05,
+        "k3": 0.08411277202514975,
+        "dA": 0.18277349218295186,
+        "dV": 1.0,
+        "ds": 0.7234798494466729
+    }
 
 emotion = Emotion()
 
@@ -95,13 +105,12 @@ def run_realtime_cycle():
         top_1 = sorted_actions[0]
         top_2 = sorted_actions[1]
 
-        print(
-            f"tick={tick:02d} phase={phase:<10} "
-            f"env(s={env.sound:.2f}, t={env.threat:.2f}, l={env.light:.2f}) "
-            f"stress={emotion.stress:.3f} A={emotion.Arousal:.3f} V={emotion.Valence:.3f} "
-            f"decision={decision:<7} attitude={attitude} "
-            f"top=({top_1[0]}:{top_1[1]:.3f}, {top_2[0]}:{top_2[1]:.3f})"
-        )
+        print("-" * 65)
+        print(f"⏱️ TICK: {tick:02d} | 📍 FASE: {phase.upper()}")
+        print(f"🌍 ENTORNO: [Sonido: {env.sound:.2f} | Amenaza: {env.threat:.2f} | Luz: {env.light:.2f}]")
+        print(f"🧠 EMOCIÓN: [Estrés: {emotion.stress:.3f} | Arousal: {emotion.Arousal:.3f} | Valencia: {emotion.Valence:.3f}]")
+        print(f"🤖 ACCIÓN:  >> {decision.upper()} <<  ({attitude})")
+        print(f"📊 TOP 2:   {top_1[0].upper()} ({top_1[1]:.2f}) vs {top_2[0].upper()} ({top_2[1]:.2f})")
 
         if REAL_TIME:
             time.sleep(TICK_SECONDS)
