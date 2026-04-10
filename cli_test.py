@@ -1,0 +1,128 @@
+from models.emotion import Emotion
+from models.environment import Environment
+from fuzzy.engine import process_fuzzy_logic
+from models.enums import get_attitude_from_decision
+
+import time
+from collections import Counter
+
+# Semilla biológica extraída del entrenamiento genético
+params = {
+    "w1": 0.7413104201667432,
+    "w2": 0.08276221119907848,
+    "w3": 0.012461855765321439,
+    "w4": 0.21704476675438203,
+    "w5": 0.8199247007109596,
+    "w6": 0.4737650235532931,
+    "w7": 0.3436643765122384,
+    "w8": 0.21460749287341574,
+    "k1": 0.5870543041059664,
+    "k2": 0.05,
+    "k3": 0.08411277202514975,
+    "dA": 0.18277349218295186,
+    "dV": 1.0,
+    "ds": 0.7234798494466729
+}
+
+emotion = Emotion()
+
+REAL_TIME = True
+TICK_SECONDS = 1.0
+TARGET_ACTIONS = {"idle", "observe", "hide", "explore", "flee"}
+
+def blend(a, b, alpha):
+    return a + (b - a) * alpha
+
+def build_environment_timeline():
+    timeline = []
+
+    # Fase 1: calma inicial
+    for _ in range(5):
+        timeline.append(("calm", Environment(sound=0.05, threat=0.05, light=0.95)))
+
+    # Fase 2: subida de tension
+    for i in range(7):
+        alpha = i / 6
+        timeline.append((
+            "escalation",
+            Environment(
+                sound=blend(0.20, 0.90, alpha),
+                threat=blend(0.15, 1.00, alpha),
+                light=blend(0.80, 0.10, alpha),
+            )
+        ))
+
+    # Fase 3: pico de peligro
+    for _ in range(6):
+        timeline.append(("peak", Environment(sound=0.95, threat=1.00, light=0.05)))
+
+    # Fase 4: recuperacion gradual
+    for i in range(8):
+        alpha = i / 7
+        timeline.append((
+            "recovery",
+            Environment(
+                sound=blend(0.80, 0.10, alpha),
+                threat=blend(0.90, 0.05, alpha),
+                light=blend(0.20, 0.95, alpha),
+            )
+        ))
+
+    # Fase 5: curiosidad (entorno seguro y bien iluminado, con estimulo moderado)
+    for _ in range(8):
+        timeline.append(("curiosity", Environment(sound=0.55, threat=0.00, light=1.00)))
+
+    return timeline
+
+def run_realtime_cycle():
+    timeline = build_environment_timeline()
+    seen_actions = []
+    print("=== Simulacion en tiempo real (1 decision por segundo) ===")
+
+    for tick, (phase, env) in enumerate(timeline, start=1):
+        # 1. Update Continuous System
+        emotion.update(env, params)
+
+        # 2. Pipeline Mental Desacoplado
+        decision, top_opts = process_fuzzy_logic(emotion)
+        attitude = get_attitude_from_decision(decision)
+        seen_actions.append(decision)
+
+        # Imprimir bonita métrica
+        top_list = list(top_opts.items())
+        top_1 = top_list[0] if len(top_list) > 0 else ("none", 0)
+        top_2 = top_list[1] if len(top_list) > 1 else ("none", 0)
+
+        print("-" * 65)
+        print(f"⏱️ TICK: {tick:02d} | 📍 FASE: {phase.upper()}")
+        print(f"🌍 ENTORNO: [Sonido: {env.sound:.2f} | Amenaza: {env.threat:.2f} | Luz: {env.light:.2f}]")
+        print(f"🧠 EMOCIÓN: [Estrés: {emotion.stress:.3f} | Arousal: {emotion.Arousal:.3f} | Valencia: {emotion.Valence:.3f}]")
+        print(f"🤖 ACCIÓN:  >> {decision.upper()} <<  ({attitude})")
+        print(f"📊 TOP 2:   {top_1[0].upper()} ({top_1[1]:.2f}) vs {top_2[0].upper()} ({top_2[1]:.2f})")
+
+        if REAL_TIME:
+            time.sleep(TICK_SECONDS)
+
+    counts = Counter(seen_actions)
+    seen_set = set(seen_actions)
+    missing = sorted(TARGET_ACTIONS - seen_set)
+
+    print("=== Resumen de acciones ===")
+    for action in sorted(TARGET_ACTIONS):
+        print(f"  {action}: {counts.get(action, 0)}")
+
+    if missing:
+        print(f"Acciones no activadas: {', '.join(missing)}")
+        print(
+            "Nota: 'explore' requiere valence positiva y arousal medio/alto al mismo tiempo; "
+            "con los pesos actuales, ese cruce es raro en una dinamica natural."
+        )
+    else:
+        print("Se activaron todas las acciones objetivo.")
+
+    print("=== Fin del ciclo ===")
+
+
+if __name__ == "__main__":
+    run_realtime_cycle()
+
