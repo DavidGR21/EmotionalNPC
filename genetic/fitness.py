@@ -5,9 +5,9 @@ from fuzzy.inference import choose_action
 from main import build_environment_timeline
 
 # ==========================================
-# EVALUADOR DEL DESEMPEÑO (FITNESS FUNCTION)
+# FITNESS FUNCTION)
 # ==========================================
-# Aquí es donde las matemáticas juzgan si un NPC sobrevivirá a la selección natural.
+# Aquí es donde se juzga si un NPC sobrevivirá a la selección natural.
 # Usamos el Patrón de Diseño "Factory" (Fábrica): Dependiendo de qué "palabra" le
 # pasemos a la función (ej: "cobarde"), esta nos construirá y devolverá una min-función
 # de evaluación que premia cosas distintas.
@@ -114,7 +114,7 @@ def get_fitness_evaluator(personality_type="normal"):
                 if decision == "explore": delta += 10
                 elif decision == "idle": delta -= 2
         return delta
-        
+
     def _score_cobarde(phase, env, emotion, decision):
         """El Juez Paranoico: Te premia si huyes de tu propia sombra."""
         delta = 0.0
