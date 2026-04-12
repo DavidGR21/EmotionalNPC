@@ -7,10 +7,11 @@ class Emotion:
 
     def update(self, environment, params):
         # 1. STRESS (dinámico)
+        # Amplificador x2.0: La oscuridad pega doble
         stimulus_s = (
             params["k1"] * environment.threat +
             params["k2"] * environment.sound +
-            params["k3"] * (1 - environment.light)
+            params["k3"] * ((1 - environment.light) * 2.0)
         ) / (params["k1"] + params["k2"] + params["k3"])
 
         self.stress += (stimulus_s - self.stress) * params["ds"]
@@ -19,19 +20,23 @@ class Emotion:
         target_A = (
             params["w1"] * environment.sound +
             params["w2"] * environment.threat +
-            params["w3"] * (1 - environment.light) +
+            params["w3"] * ((1 - environment.light) * 2.0) +
             params["w4"] * self.stress
         ) / (params["w1"] + params["w2"] + params["w3"] + params["w4"])
 
         self.Arousal += (target_A - self.Arousal) * params["dA"]
 
-        # 3. VALENCE (SIN NORMALIZAR MAL)
+        # 3. VALENCE
+        # Penalización directa: La oscuridad no solo "no aporta" relajación, sino que resta bienestar directamente
+        darkness_penalty = (1 - environment.light) * 1.5
+        
         target_V = (
             params["w5"] * environment.light -
             (
                 params["w6"] * environment.threat +
                 params["w7"] * environment.sound +
-                params["w8"] * self.stress
+                params["w8"] * self.stress +
+                darkness_penalty
             )
         )
 

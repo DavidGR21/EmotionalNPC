@@ -51,6 +51,9 @@ def update_npc(npc_id: str, env_data: EnvironmentSchema):
         
     npc_instance = active_npcs[npc_id]
     
+    # Printear la solicitud entrante a la terminal del server backend
+    print(f"📥 [API] Datos de Godot recibidos para '{npc_id}': Sonido={env_data.sound}, Amenaza={env_data.threat}, Luz={env_data.light}")
+    
     # Modelo matemático (Puro)
     json_response = npc_instance.step(
         sound=env_data.sound,
