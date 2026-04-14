@@ -2,27 +2,15 @@ from models.emotion import Emotion
 from models.environment import Environment
 from fuzzy.engine import process_fuzzy_logic
 from models.enums import get_attitude_from_decision
+from controllers.personality_controller import load_personality
 
 import time
 from collections import Counter
 
 # Semilla biológica extraída del entrenamiento genético
-params = {
-    "w1": 0.7413104201667432,
-    "w2": 0.08276221119907848,
-    "w3": 0.012461855765321439,
-    "w4": 0.21704476675438203,
-    "w5": 0.8199247007109596,
-    "w6": 0.4737650235532931,
-    "w7": 0.3436643765122384,
-    "w8": 0.21460749287341574,
-    "k1": 0.5870543041059664,
-    "k2": 0.05,
-    "k3": 0.08411277202514975,
-    "dA": 0.18277349218295186,
-    "dV": 1.0,
-    "ds": 0.7234798494466729
-}
+params = load_personality("explorador")
+if not params:
+    raise ValueError("No se encontro personalidad entrenada 'superviviente' en data/personalities.json")
 
 emotion = Emotion()
 
@@ -84,7 +72,7 @@ def run_realtime_cycle():
         emotion.update(env, params)
 
         # 2. Pipeline Mental Desacoplado
-        decision, top_opts = process_fuzzy_logic(emotion)
+        decision, top_opts = process_fuzzy_logic(emotion, params)
         attitude = get_attitude_from_decision(decision)
         seen_actions.append(decision)
 

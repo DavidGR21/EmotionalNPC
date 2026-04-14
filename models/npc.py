@@ -23,7 +23,7 @@ class Npc:
         self.emotion.update(env, self.params)
         
         # 2. Pipeline Mental Desacoplado (Motor de Lógica Difusa)
-        decision, top_opts = process_fuzzy_logic(self.emotion)
+        decision, top_opts = process_fuzzy_logic(self.emotion, self.params)
         
         # 3. Postprocesamiento Estético 
         attitude = get_attitude_from_decision(decision)

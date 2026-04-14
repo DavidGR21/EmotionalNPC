@@ -7,13 +7,19 @@ from genetic.fitness import get_fitness_evaluator
 # ==========================================
 # CONFIGURACIÓN DEL ALGORITMO GENÉTICO (HIPERPARÁMETROS)
 # ==========================================
-POPULATION_SIZE = 50   # Cantidad de NPCs arrojados a la arena por cada ciclo.
-GENERATIONS = 30       # Cuántas veces ocurrirá la evolución/supervivencia.
+POPULATION_SIZE = 80   # Cantidad de NPCs arrojados a la arena por cada ciclo.
+GENERATIONS = 50       # Cuántas veces ocurrirá la evolución/supervivencia.
 MUTATION_RATE = 0.1    # Probabilidad del 10% de que los hijos nazcan con alguna pequeña alteración aleatoria.
 ELITISM = 5            # Cuántos de los "Súper Padres" ganadores pasan directo a la siguiente generación intactos.
 
 
-def train_genetic_algorithm(personality_type="normal"):
+def train_genetic_algorithm(
+    personality_type="normal",
+    population_size=POPULATION_SIZE,
+    generations=GENERATIONS,
+    mutation_rate=MUTATION_RATE,
+    elitism=ELITISM,
+):
     print(f"=== Iniciando Entrenamiento Evolutivo para: {personality_type.upper()} ===")
     
     # 0. Instanciar a nuestra Fábrica dependiendo de lo pedido (Normal, Cobarde, etc.)
@@ -21,7 +27,7 @@ def train_genetic_algorithm(personality_type="normal"):
     
     # 1. POBLACIÓN INICIAL (DÍA CERO)
     # Creamos 'N' cantidad de NPCs con genes completamente aleatorios.
-    population = [generate_random_genome() for _ in range(POPULATION_SIZE)]
+    population = [generate_random_genome() for _ in range(population_size)]
     
     # Memoria a lo largo del tiempo (Para no perder el mejor, incluso si luego nacen peores hijos)
     best_overall_genome = None
@@ -30,13 +36,17 @@ def train_genetic_algorithm(personality_type="normal"):
     # ----------------------------------------------
     # BUCLE EVOLUTIVO (EL TIMESHIFT DE GENERACIONES)
     # ----------------------------------------------
-    for generation in range(1, GENERATIONS + 1):
+    for generation in range(1, generations + 1):
         
         # 2. EVALUACIÓN DE SUPERVIVENCIA (FITNESS)
         scored_population = []
         for genome in population:
             # Enviamos el genotipo a la 'Matrix' / simulación. Y nos devolverá un score.
-            score = evaluate_fitness(genome)
+            score = evaluate_fitness(
+                genome,
+                generation=generation,
+                total_generations=generations,
+            )
             scored_population.append((score, genome))
             
         # Ordenamos a la población. Los de score altísimo van al inicio, los perdedores van al final.
@@ -45,7 +55,7 @@ def train_genetic_algorithm(personality_type="normal"):
         # Estadísticas de esta generación actual
         current_best_score = scored_population[0][0]     # Score del alfa (Indice 0)
         current_best_genome = scored_population[0][1]    # Sus genes
-        current_avg_score = sum(s for s, g in scored_population) / POPULATION_SIZE  # Score promedio de todos
+        current_avg_score = sum(s for s, g in scored_population) / population_size  # Score promedio de todos
         
         # ¿El mejor individuo de esta ronda superó al rey de todos los tiempos? Si es así, se corona.
         if current_best_score > best_overall_fitness:
@@ -56,7 +66,7 @@ def train_genetic_algorithm(personality_type="normal"):
         print(f"Gen {generation:02d} | Mejor Score: {current_best_score:>6.1f} | Media: {current_avg_score:>6.1f}")
         
         # Si ya llegamos a nuestro límite (ej. Gen 30), cerramos el ciclo y no nos molestamos en cruzar.
-        if generation == GENERATIONS:
+        if generation == generations:
             break
             
         # 3. SELECCIÓN NATURAL Y REPRODUCCIÓN (PARA EL SIGUIENTE CICLO)
@@ -64,16 +74,16 @@ def train_genetic_algorithm(personality_type="normal"):
         next_population = []
         
         # A. ELITISMO: La naturaleza perdona. Protegemos a los "ELITISM" mejores de morir y los ponemos directo en la nueva lista.
-        for i in range(ELITISM):
+        for i in range(elitism):
             next_population.append(scored_population[i][1])
             
         # B. SELECCIÓN: Elegiremos como 'Padres Creadores' solo a la **Mitad Ganadora** (los fuertes).
         # Los que quedaron en la mitad perdedora son eliminados del pool genético (su ADN muere aquí).
-        best_half = [g for s, g in scored_population[:POPULATION_SIZE//2]]
+        best_half = [g for s, g in scored_population[:population_size//2]]
         
         # Bucle hasta rellenar de habitantes (50 total)
         import random
-        while len(next_population) < POPULATION_SIZE:
+        while len(next_population) < population_size:
             # Elegimos al azar 2 padres del grupo de los supervivientes
             parent1 = random.choice(best_half)
             parent2 = random.choice(best_half)
@@ -82,7 +92,7 @@ def train_genetic_algorithm(personality_type="normal"):
             child = crossover(parent1, parent2)
             
             # Mutamos alguna probabilidad aleatoria del hijo (radiación, evolución genética al azar)
-            child = mutate(child, mutation_rate=MUTATION_RATE)
+            child = mutate(child, mutation_rate=mutation_rate)
             
             # Agregamos este nuevo súper hijo al siguiente ciclo.
             next_population.append(child)
@@ -122,7 +132,29 @@ if __name__ == "__main__":
     # sys.argv capta los textos detrás de 'python script.py'
     # Ejemplo: 'python train_ga.py valiente' -> sys.argv[1] == 'valiente'
     target_personality = "normal"
+    population_size = POPULATION_SIZE
+    generations = GENERATIONS
+    mutation_rate = MUTATION_RATE
+    elitism = ELITISM
+
     if len(sys.argv) > 1:
         target_personality = sys.argv[1].lower()
+
+    # Uso opcional:
+    # py train_ga.py normal 80 50 0.1 5
+    if len(sys.argv) > 2:
+        population_size = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        generations = int(sys.argv[3])
+    if len(sys.argv) > 4:
+        mutation_rate = float(sys.argv[4])
+    if len(sys.argv) > 5:
+        elitism = int(sys.argv[5])
         
-    train_genetic_algorithm(target_personality)
+    train_genetic_algorithm(
+        target_personality,
+        population_size=population_size,
+        generations=generations,
+        mutation_rate=mutation_rate,
+        elitism=elitism,
+    )
