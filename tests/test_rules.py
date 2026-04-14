@@ -3,6 +3,7 @@ from models.environment import Environment
 from fuzzy.fuzzifier import fuzzify_arousal, fuzzify_valence
 from fuzzy.rules import evaluate_rules, normalize_actions
 from fuzzy.inference import choose_action
+from controllers.personality_controller import load_personality
 
 
 PARAMS = {
@@ -13,6 +14,10 @@ PARAMS = {
 }
 
 EMOTION_STEPS = 10
+
+FUZZY_GENOME = load_personality("explorador")
+if not FUZZY_GENOME:
+    raise ValueError("No se encontro personalidad entrenada 'normal' en data/personalities.json")
 
 
 EMOTION_CASES = [
@@ -97,8 +102,8 @@ def simulate_emotion_steps(environment, params, steps):
 
     for step in range(1, steps + 1):
         emotion.update(environment, params)
-        af = fuzzify_arousal(emotion.Arousal)
-        vf = fuzzify_valence(emotion.Valence)
+        af = fuzzify_arousal(emotion.Arousal, FUZZY_GENOME)
+        vf = fuzzify_valence(emotion.Valence, FUZZY_GENOME)
         actions = normalize_actions(evaluate_rules(af, vf))
         decision = choose_action(actions)
 
@@ -147,8 +152,8 @@ def run_emotion_case(case_name, environment, params, steps=EMOTION_STEPS):
 
 
 def run_fuzzy_case(expected_rule, arousal, valence):
-    af = fuzzify_arousal(arousal)
-    vf = fuzzify_valence(valence)
+    af = fuzzify_arousal(arousal, FUZZY_GENOME)
+    vf = fuzzify_valence(valence, FUZZY_GENOME)
     actions = normalize_actions(evaluate_rules(af, vf))
     decision = choose_action(actions)
 
