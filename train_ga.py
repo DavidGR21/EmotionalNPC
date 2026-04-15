@@ -7,8 +7,8 @@ from genetic.fitness import get_fitness_evaluator
 # ==========================================
 # CONFIGURACIÓN DEL ALGORITMO GENÉTICO (HIPERPARÁMETROS)
 # ==========================================
-POPULATION_SIZE = 80   # Cantidad de NPCs arrojados a la arena por cada ciclo.
-GENERATIONS = 50       # Cuántas veces ocurrirá la evolución/supervivencia.
+POPULATION_SIZE = 150   # Cantidad de NPCs arrojados a la arena por cada ciclo.
+GENERATIONS = 150       # Cuántas veces ocurrirá la evolución/supervivencia.
 MUTATION_RATE = 0.1    # Probabilidad del 10% de que los hijos nazcan con alguna pequeña alteración aleatoria.
 ELITISM = 5            # Cuántos de los "Súper Padres" ganadores pasan directo a la siguiente generación intactos.
 
