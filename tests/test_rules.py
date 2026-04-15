@@ -7,10 +7,20 @@ from controllers.personality_controller import load_personality
 
 
 PARAMS = {
-    "w1": 0.4, "w2": 0.5, "w3": 0.3, "w4": 0.2,
-    "w5": 0.7, "w6": 0.6, "w7": 0.5, "w8": 0.3,
-    "k1": 0.3, "k2": 0.2, "k3": 0.2,
-    "dA": 0.6, "dV": 0.2, "ds": 0.15,
+    "recepcion_sonoro": 0.4,
+    "recepcion_amenaza": 0.5,
+    "recepcion_nivel_luz": 0.3,
+    "recepcion_estres": 0.2,
+    "comfort_luz": 0.7,
+    "vulnerabilidad_peligro": 0.6,
+    "misofonia": 0.5,
+    "vulnerabilidad_estres": 0.3,
+    "sensibilidad_amenaza": 0.3,
+    "sensibilidad_auditiva": 0.2,
+    "sensibilidad_oscuridad": 0.2,
+    "volatilidad": 0.6,
+    "estabilidad_emocional": 0.2,
+    "resiliencia_estres": 0.15,
 }
 
 EMOTION_STEPS = 10
@@ -54,33 +64,42 @@ FUZZY_CASES = [
 
 def compute_emotion_step(environment, params):
     stimulus_s = (
-        params["k1"] * environment.threat +
-        params["k2"] * environment.sound +
-        params["k3"] * (1 - environment.light)
-    ) / (params["k1"] + params["k2"] + params["k3"])
+        params["sensibilidad_amenaza"] * environment.threat +
+        params["sensibilidad_auditiva"] * environment.sound +
+        params["sensibilidad_oscuridad"] * (1 - environment.light)
+    ) / (
+        params["sensibilidad_amenaza"] +
+        params["sensibilidad_auditiva"] +
+        params["sensibilidad_oscuridad"]
+    )
 
-    stress = stimulus_s * params["ds"]
+    stress = stimulus_s * params["resiliencia_estres"]
 
     target_arousal = (
-        params["w1"] * environment.sound +
-        params["w2"] * environment.threat +
-        params["w3"] * (1 - environment.light) +
-        params["w4"] * stress
-    ) / (params["w1"] + params["w2"] + params["w3"] + params["w4"])
+        params["recepcion_sonoro"] * environment.sound +
+        params["recepcion_amenaza"] * environment.threat +
+        params["recepcion_nivel_luz"] * (1 - environment.light) +
+        params["recepcion_estres"] * stress
+    ) / (
+        params["recepcion_sonoro"] +
+        params["recepcion_amenaza"] +
+        params["recepcion_nivel_luz"] +
+        params["recepcion_estres"]
+    )
 
     target_valence = (
-        params["w5"] * environment.light -
+        params["comfort_luz"] * environment.light -
         (
-            params["w6"] * environment.threat +
-            params["w7"] * environment.sound +
-            params["w8"] * stress
+            params["vulnerabilidad_peligro"] * environment.threat +
+            params["misofonia"] * environment.sound +
+            params["vulnerabilidad_estres"] * stress
         )
     )
     target_valence = max(-1, min(1, target_valence))
     target_valence = (target_valence + 1) / 2
 
-    expected_arousal = target_arousal * params["dA"]
-    expected_valence = target_valence * params["dV"]
+    expected_arousal = target_arousal * params["volatilidad"]
+    expected_valence = target_valence * params["estabilidad_emocional"]
 
     emotion = Emotion()
     emotion.update(environment, params)

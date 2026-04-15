@@ -1,104 +1,111 @@
-Para la lógica difusa, vamos a meter datos de entrada, del entorno, a partir de estos datos vamos a definir con nuestra funcion de pertenencia gausseana.
+# EmotionalNPC - Registro de Refactor de Parámetros
 
-stress:
-    stimulus_s = (
-        params["k1"] * environment.threat +
-        params["k2"] * environment.sound +
-        params["k3"] * (1 - environment.light)
-    ) / (params["k1"] + params["k2"] + params["k3"])
+Este README documenta el cambio de nombres del genoma para hacerlo más entendible y cercano al modelado conductual en vida real, manteniendo la base matemática del sistema.
 
-    self.stress += (stimulus_s - self.stress) * params["ds"]
+## Registro de cambios de nombre
 
-arousal:
-    target_A = (
-        params["w1"] * environment.sound +
-        params["w2"] * environment.threat +
-        params["w3"] * (1 - environment.light) +
-        params["w4"] * self.stress
-    ) / (params["w1"] + params["w2"] + params["w3"] + params["w4"])
+### Pesos perceptuales y de valencia
 
-    self.Arousal += (target_A - self.Arousal) * params["dA"]
+- w1 -> recepcion_sonoro
+- w2 -> recepcion_amenaza
+- w3 -> recepcion_nivel_luz
+- w4 -> recepcion_estres
+- w5 -> comfort_luz
+- w6 -> vulnerabilidad_peligro
+- w7 -> misofonia
+- w8 -> vulnerabilidad_estres
 
-valance:
-    target_V = (
-        params["w5"] * environment.light -
-        (
-            params["w6"] * environment.threat +
-            params["w7"] * environment.sound +
-            params["w8"] * self.stress
-        )
+### Sensibilidades de estrés
+
+- k1 -> sensibilidad_amenaza
+- k2 -> sensibilidad_auditiva
+- k3 -> sensibilidad_oscuridad
+
+### Reguladores de dinámica emocional
+
+- dA -> volatilidad
+- dV -> estabilidad_emocional
+- ds -> resiliencia_estres
+
+### Centros difusos de arousal
+
+- cA_low -> estimulacion_optima_baja
+- cA_medium -> estimulacion_optima_media
+- cA_high -> estimulacion_optima_alta
+
+### Centros difusos de valence
+
+- cV_negative -> umbral_bienestar_negativo
+- cV_neutral -> umbral_bienestar_neutral
+- cV_positive -> umbral_bienestar_positivo
+
+### Sigmas
+
+- sigma -> tolerancia_estimulo
+- nuevo -> tolerancia_incomodidad
+
+Nota: por ahora el funcionamiento de inferencia se mantiene sin separación funcional completa de sigmas. El sistema conserva el comportamiento previo y usa tolerancia_estimulo como sigma efectiva para fuzzificación.
+
+## Explicación de cada característica
+
+- recepcion_sonoro: cuánto eleva el arousal el nivel sonoro.
+- recepcion_amenaza: cuánto eleva el arousal la amenaza percibida.
+- recepcion_nivel_luz: cuánto aporta la oscuridad relativa al arousal.
+- recepcion_estres: cuánto influye el estrés interno en el arousal.
+- comfort_luz: contribución positiva de la luz a la valencia.
+- vulnerabilidad_peligro: impacto negativo del peligro sobre la valencia.
+- misofonia: impacto negativo del sonido sobre la valencia.
+- vulnerabilidad_estres: impacto negativo del estrés sobre la valencia.
+- sensibilidad_amenaza: sensibilidad de acumulación de estrés ante amenaza.
+- sensibilidad_auditiva: sensibilidad de acumulación de estrés ante sonido.
+- sensibilidad_oscuridad: sensibilidad de acumulación de estrés ante oscuridad.
+- volatilidad: rapidez de ajuste de arousal al objetivo instantáneo.
+- estabilidad_emocional: inercia de ajuste de valencia al objetivo instantáneo.
+- resiliencia_estres: velocidad de convergencia del estrés interno al estímulo.
+- estimulacion_optima_baja/media/alta: centros gaussianos para etiquetas low/medium/high de arousal.
+- umbral_bienestar_negativo/neutral/positivo: centros gaussianos para etiquetas negative/neutral/positive de valence.
+- tolerancia_estimulo: anchura gaussiana principal del sistema difuso actual.
+- tolerancia_incomodidad: segunda anchura gaussiana modelada para futura separación por eje.
+
+## Fragmento de actualización emocional (esquema)
+
+```python
+stimulus_s = (
+    params["sensibilidad_amenaza"] * environment.threat +
+    params["sensibilidad_auditiva"] * environment.sound +
+    params["sensibilidad_oscuridad"] * (1 - environment.light)
+) / (
+    params["sensibilidad_amenaza"] +
+    params["sensibilidad_auditiva"] +
+    params["sensibilidad_oscuridad"]
+)
+
+self.stress += (stimulus_s - self.stress) * params["resiliencia_estres"]
+
+target_A = (
+    params["recepcion_sonoro"] * environment.sound +
+    params["recepcion_amenaza"] * environment.threat +
+    params["recepcion_nivel_luz"] * (1 - environment.light) +
+    params["recepcion_estres"] * self.stress
+) / (
+    params["recepcion_sonoro"] +
+    params["recepcion_amenaza"] +
+    params["recepcion_nivel_luz"] +
+    params["recepcion_estres"]
+)
+
+self.Arousal += (target_A - self.Arousal) * params["volatilidad"]
+
+target_V = (
+    params["comfort_luz"] * environment.light -
+    (
+        params["vulnerabilidad_peligro"] * environment.threat +
+        params["misofonia"] * environment.sound +
+        params["vulnerabilidad_estres"] * self.stress
     )
+)
 
-    target_V = max(-1, min(1, target_V))   # rango [-1, 1]
-
-    # Convertir a [0,1] pero SIN perder contraste
-    target_V = (target_V + 1) / 2
-
-    self.Valence += (target_V - self.Valence) * params["dV"]
-
-Significado de los pesos (USAMOS AG PARA LA OPTIMIZACIÓN)
-w1 → impacto del ruido
-w2 → impacto del peligro
-w3 → impacto de la oscuridad
-w4 → impacto del estrés
-w5 → impacto positivo de la luz
-w6 → impacto negativo del peligro
-w7 → impacto negativo del ruido
-w8 → impacto negativo del estrés
-k1 → acumulación por peligro
-k2 → acumulación por ruido
-k3 → acumulación por oscuridad
-DECAIMIENTO:
-dA → calma emocional
-dV → estabilidad emocional
-ds → recuperación del estrés
-
-Normalizamos valores:
-A(t) = clamp(A(t), 0, 1)
-V(t) = clamp(V(t), 0, 1)
-stress(t) = clamp(stress(t), 0, 1)
-
-x pertenece [0,1]
-
-x = valor(arousal o valance)
-c = centro donde esta el pico
-σ (sigma) = que tan ancha es la curva
-
-arousal = bajo, medio, alto
-valance = negativo, neutro, positivo
-
-Elegir centros
-bajo / negativo : 0.2
-medio / neutro : 0.5
-alto / positivo : 0.8
-
-Elegimos sigma
-σ = 0.15
-
-Generamos 6 funciones
-μ_bajo, μ_medio, μ_alto
-μ_bajo, μ_medio, μ_alto
-
-Acciones:
-flee (huir)
-hide (esconderse)
-observe (observar)
-explore (explorar)
-idle (inactivo)
-
-Generamos las reglas:
-R1: IF A=alto AND V=negativo THEN flee
-R2: IF A=medio AND V=negativo THEN hide
-R3: IF A=bajo AND V=negativo THEN idle
-
-R4: IF A=alto AND V=neutro THEN observe
-R5: IF A=medio AND V=neutro THEN observe
-R6: IF A=bajo AND V=neutro THEN observe
-
-R7: IF A=alto AND V=positivo THEN explore
-R8: IF A=medio AND V=positivo THEN explore
-R9: IF A=bajo AND V=positivo THEN idle
-
-
-
-Control de transiciones al pasar a tiempo real
+target_V = max(-1, min(1, target_V))
+target_V = (target_V + 1) / 2
+self.Valence += (target_V - self.Valence) * params["estabilidad_emocional"]
+```

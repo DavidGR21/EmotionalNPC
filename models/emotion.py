@@ -8,30 +8,39 @@ class Emotion:
     def update(self, environment, params):
         # 1. STRESS (dinámico)
         stimulus_s = (
-            params["k1"] * environment.threat +
-            params["k2"] * environment.sound +
-            params["k3"] * (1 - environment.light)
-        ) / (params["k1"] + params["k2"] + params["k3"])
+            params["sensibilidad_amenaza"] * environment.threat +
+            params["sensibilidad_auditiva"] * environment.sound +
+            params["sensibilidad_oscuridad"] * (1 - environment.light)
+        ) / (
+            params["sensibilidad_amenaza"] +
+            params["sensibilidad_auditiva"] +
+            params["sensibilidad_oscuridad"]
+        )
 
-        self.stress += (stimulus_s - self.stress) * params["ds"]
+        self.stress += (stimulus_s - self.stress) * params["resiliencia_estres"]
 
         # 2. AROUSAL (reactivo)
         target_A = (
-            params["w1"] * environment.sound +
-            params["w2"] * environment.threat +
-            params["w3"] * (1 - environment.light) +
-            params["w4"] * self.stress
-        ) / (params["w1"] + params["w2"] + params["w3"] + params["w4"])
+            params["recepcion_sonoro"] * environment.sound +
+            params["recepcion_amenaza"] * environment.threat +
+            params["recepcion_nivel_luz"] * (1 - environment.light) +
+            params["recepcion_estres"] * self.stress
+        ) / (
+            params["recepcion_sonoro"] +
+            params["recepcion_amenaza"] +
+            params["recepcion_nivel_luz"] +
+            params["recepcion_estres"]
+        )
 
-        self.Arousal += (target_A - self.Arousal) * params["dA"]
+        self.Arousal += (target_A - self.Arousal) * params["volatilidad"]
 
         # 3. VALENCE (SIN NORMALIZAR MAL)
         target_V = (
-            params["w5"] * environment.light -
+            params["comfort_luz"] * environment.light -
             (
-                params["w6"] * environment.threat +
-                params["w7"] * environment.sound +
-                params["w8"] * self.stress
+                params["vulnerabilidad_peligro"] * environment.threat +
+                params["misofonia"] * environment.sound +
+                params["vulnerabilidad_estres"] * self.stress
             )
         )
 
@@ -40,7 +49,7 @@ class Emotion:
         # Convertir a [0,1] 
         target_V = (target_V + 1) / 2
 
-        self.Valence += (target_V - self.Valence) * params["dV"]
+        self.Valence += (target_V - self.Valence) * params["estabilidad_emocional"]
 
         # 4. CLAMP FINAL
         self.stress = clamp(self.stress)
