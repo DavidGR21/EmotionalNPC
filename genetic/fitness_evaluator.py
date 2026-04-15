@@ -11,7 +11,7 @@ Formula final:
 """
 
 from models.emotion import Emotion
-from fuzzy.engine import process_fuzzy_logic
+from fuzzy.sistema_difuso import process_fuzzy_logic
 from cli_test import build_environment_timeline
 from genetic.fitness_components import (
     component_consistency,
@@ -51,12 +51,16 @@ def evaluate_timeline(genome, scoring_logic, generation=1, total_generations=1):
 
     for phase, env in timeline:
         emotion.update(env, genome)
-        decision, _, conf = process_fuzzy_logic(emotion, genome, include_action_scores=True)
+        decision, _, _, action_scores, _ = process_fuzzy_logic(
+            emotion,
+            genome,
+            include_action_scores=True,
+        )
 
-        totals["survival"] += component_survival(env, conf)
-        totals["consistency"] += component_consistency(env, emotion, conf, prev_conf)
-        totals["personality"] += scoring_logic(phase, env, emotion, decision, conf)
-        prev_conf = conf
+        totals["survival"] += component_survival(env, action_scores)
+        totals["consistency"] += component_consistency(env, emotion, action_scores, prev_conf)
+        totals["personality"] += scoring_logic(phase, env, emotion, decision, action_scores)
+        prev_conf = action_scores
 
     tick_count = max(1, len(timeline))
     normalized = normalize_component_totals(totals, tick_count)

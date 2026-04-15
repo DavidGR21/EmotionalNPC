@@ -16,7 +16,7 @@ from genetic.fitness_evaluator import evaluate_timeline
 from genetic.fitness_profiles import get_personality_scorer
 
 
-def get_fitness_evaluator(personality_type="normal"):
+def get_fitness_evaluator(personality_type="calmada"):
     """
     Factory que retorna la funcion de fitness para la personalidad solicitada.
 

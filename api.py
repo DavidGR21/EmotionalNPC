@@ -13,7 +13,7 @@ active_npcs: Dict[str, Npc] = {}
 # ====== ESQUEMAS DE VALIDACIÓN (Contratos de Datos) ======
 class NpcInitSchema(BaseModel):
     id: str
-    personality: str = "normal"
+    personality: str = "calmada"
 
 class EnvironmentSchema(BaseModel):
     sound: float

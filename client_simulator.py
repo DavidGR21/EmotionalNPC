@@ -5,7 +5,7 @@ import random
 
 BASE_URL = "http://localhost:8000"
 NPC_ID = "Personaje"
-PERSONALITY = "normal"
+PERSONALITY = "calmada"
 
 print("=============================================")
 print("  SIMULADOR DEL MOTOR GRÁFICO O CLIENTE      ")
@@ -52,9 +52,14 @@ for tick in range(1, 6): # Simula 5 iteraciones en el juego
             
             action = ai_data["decision"].upper()
             attitude = ai_data["attitude"]
+            emotion = ai_data.get("emotion", "desconocida")
             
-            print(f"           📥 IA Decide Acción: >> {action} << ({attitude})")
-            print(f"           📊 Detalles del cerebro: Estrés={ai_data['metrics']['stress']}, Posibles={ai_data['top_options']}")
+            print(f"           📥 IA Emocion: {emotion.upper()} | Accion: >> {action} << ({attitude})")
+            print(
+                "           📊 Detalles del cerebro: "
+                f"Estrés={ai_data['metrics']['stress']}, "
+                f"Top emociones={ai_data['top_options']}"
+            )
             
     except Exception as e:
         print("❌ Error en Godot al intentar hacer fetch:", e)

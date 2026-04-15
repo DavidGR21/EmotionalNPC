@@ -14,7 +14,7 @@ ELITISM = 5            # Cuántos de los "Súper Padres" ganadores pasan directo
 
 
 def train_genetic_algorithm(
-    personality_type="normal",
+    personality_type="calmada",
     population_size=POPULATION_SIZE,
     generations=GENERATIONS,
     mutation_rate=MUTATION_RATE,
@@ -22,7 +22,7 @@ def train_genetic_algorithm(
 ):
     print(f"=== Iniciando Entrenamiento Evolutivo para: {personality_type.upper()} ===")
     
-    # 0. Instanciar a nuestra Fábrica dependiendo de lo pedido (Normal, Cobarde, etc.)
+    # 0. Instanciar evaluador para la personalidad emocional solicitada.
     evaluate_fitness = get_fitness_evaluator(personality_type)
     
     # 1. POBLACIÓN INICIAL (DÍA CERO)
@@ -130,8 +130,8 @@ def train_genetic_algorithm(
 if __name__ == "__main__":
     # ARGUMENTOS DE CONSOLA: 
     # sys.argv capta los textos detrás de 'python script.py'
-    # Ejemplo: 'python train_ga.py valiente' -> sys.argv[1] == 'valiente'
-    target_personality = "normal"
+    # Ejemplo: 'python train_ga.py miedosa' -> sys.argv[1] == 'miedosa'
+    target_personality = "calmada"
     population_size = POPULATION_SIZE
     generations = GENERATIONS
     mutation_rate = MUTATION_RATE
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         target_personality = sys.argv[1].lower()
 
     # Uso opcional:
-    # py train_ga.py normal 80 50 0.1 5
+    # py train_ga.py calmada 80 50 0.1 5
     if len(sys.argv) > 2:
         population_size = int(sys.argv[2])
     if len(sys.argv) > 3:

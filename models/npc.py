@@ -1,10 +1,10 @@
 from models.emotion import Emotion
 from models.environment import Environment
-from fuzzy.engine import process_fuzzy_logic
+from fuzzy.sistema_difuso import process_fuzzy_logic
 from models.enums import get_attitude_from_decision
 
 class Npc:
-    def __init__(self, name: str, params: dict, personality_type: str = "normal"):
+    def __init__(self, name: str, params: dict, personality_type: str = "calmada"):
         self.name = name
         self.personality_type = personality_type
         # El ADN neuronal (pesos genéticos para este NPC)
@@ -46,7 +46,7 @@ class Npc:
         self.emotion.update(env, self.params)
         
         # 2. Pipeline Mental Desacoplado (Motor de Lógica Difusa)
-        decision, top_opts = process_fuzzy_logic(self.emotion, self.params)
+        decision, dominant_emotion, top_emotions = process_fuzzy_logic(self.emotion, self.params)
         
         # 3. Postprocesamiento Estético 
         attitude = get_attitude_from_decision(decision)
@@ -60,7 +60,9 @@ class Npc:
                 "arousal": round(self.emotion.Arousal, 3),
                 "valence": round(self.emotion.Valence, 3)
             },
+            "emotion": dominant_emotion,
             "decision": decision,
             "attitude": attitude,
-            "top_options": top_opts
+            "top_options": top_emotions,
+            "top_emotions": top_emotions,
         }

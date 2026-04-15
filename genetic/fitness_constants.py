@@ -36,7 +36,7 @@ SIGMA_HIGH_PENALTY = 40.0
 ANNEAL_START = 1.0
 ANNEAL_END = 0.25
 
-ACTIONS = ("flee", "hide", "observe", "explore", "idle")
+ACTIONS = ("flee", "dormir", "explore", "idle")
 
 MAX_ABS_COMPONENT_PER_TICK = {
     "survival": STRONG_IMPACT,

@@ -59,17 +59,17 @@ def component_survival(env, conf):
     """
     score = 0.0
     if env.threat > THREAT_HIGH:
-        score += MEDIUM_IMPACT * conf.get("hide", 0.0)
+        score += MEDIUM_IMPACT * conf.get("dormir", 0.0)
         score += MEDIUM_IMPACT * conf.get("flee", 0.0)
         score -= MEDIUM_IMPACT * conf.get("explore", 0.0)
         score -= SOFT_IMPACT * conf.get("idle", 0.0)
     elif env.threat > THREAT_LOW:
-        score += SOFT_IMPACT * conf.get("observe", 0.0)
-        score += SOFT_IMPACT * conf.get("hide", 0.0)
+        score += SOFT_IMPACT * conf.get("dormir", 0.0)
+        score += SOFT_IMPACT * conf.get("idle", 0.0)
         score -= SOFT_IMPACT * conf.get("explore", 0.0)
     else:
         score += SOFT_IMPACT * conf.get("explore", 0.0)
-        score += SOFT_IMPACT * conf.get("observe", 0.0)
+        score += SOFT_IMPACT * conf.get("idle", 0.0)
         score -= MEDIUM_IMPACT * conf.get("flee", 0.0)
 
     return clip(score, MAX_ABS_COMPONENT_PER_TICK["survival"])

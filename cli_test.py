@@ -1,6 +1,6 @@
 from models.emotion import Emotion
 from models.environment import Environment
-from fuzzy.engine import process_fuzzy_logic
+from fuzzy.sistema_difuso import process_fuzzy_logic
 from models.enums import get_attitude_from_decision
 from controllers.personality_controller import load_personality
 
@@ -8,15 +8,15 @@ import time
 from collections import Counter
 
 # Semilla biológica extraída del entrenamiento genético
-params = load_personality("explorador")
+params = load_personality("feliz")
 if not params:
-    raise ValueError("No se encontro personalidad entrenada 'explorador' en data/personalities.json")
+    raise ValueError("No se encontro personalidad entrenada 'feliz' en data/personalities.json")
 
 emotion = Emotion()
 
 REAL_TIME = True
 TICK_SECONDS = 1.0
-TARGET_ACTIONS = {"idle", "observe", "hide", "explore", "flee"}
+TARGET_ACTIONS = {"idle", "dormir", "explore", "flee"}
 TARGET_QUADRANTS = {"Q1_high_pos", "Q2_high_neg", "Q3_low_neg", "Q4_low_pos"}
 
 def blend(a, b, alpha):
@@ -89,6 +89,33 @@ def run_quadrant_probe(personality_names):
     else:
         print("Cobertura global completa de los 4 cuadrantes.")
 
+
+def run_emotion_personality_probe(personality_names):
+    """Compara como responde cada personalidad emocional en escenarios canonicos."""
+    scenarios = [
+        ("amenaza_extrema", Environment(sound=0.95, threat=1.00, light=0.10)),
+        ("fatiga_negativa", Environment(sound=0.10, threat=0.55, light=0.20)),
+        ("estimulo_positivo", Environment(sound=0.60, threat=0.05, light=1.00)),
+        ("reposo_seguro", Environment(sound=0.02, threat=0.01, light=0.95)),
+    ]
+
+    print("=== Comparativa de personalidades emocionales ===")
+    for personality_name in personality_names:
+        test_params = load_personality(personality_name)
+        if not test_params:
+            print(f"  {personality_name}: no disponible")
+            continue
+
+        local_emotion = Emotion()
+        print(f"  [{personality_name}]")
+        for scenario_name, env in scenarios:
+            local_emotion.update(env, test_params)
+            decision, dominant_emotion, top_emotions = process_fuzzy_logic(local_emotion, test_params)
+            print(
+                f"    - {scenario_name}: emotion={dominant_emotion}, "
+                f"decision={decision}, top={top_emotions}"
+            )
+
 def build_environment_timeline():
     timeline = []
 
@@ -142,6 +169,7 @@ def build_environment_timeline():
 def run_realtime_cycle():
     timeline = build_environment_timeline()
     seen_actions = []
+    seen_emotions = []
     seen_quadrants = []
     print("=== Simulacion en tiempo real (1 decision por segundo) ===")
 
@@ -150,10 +178,11 @@ def run_realtime_cycle():
         emotion.update(env, params)
 
         # 2. Pipeline Mental Desacoplado
-        decision, top_opts = process_fuzzy_logic(emotion, params)
+        decision, dominant_emotion, top_opts = process_fuzzy_logic(emotion, params)
         attitude = get_attitude_from_decision(decision)
         quadrant = classify_russell_quadrant(emotion.Arousal, emotion.Valence)
         seen_actions.append(decision)
+        seen_emotions.append(dominant_emotion)
         seen_quadrants.append(quadrant)
 
         # Imprimir bonita métrica
@@ -166,8 +195,9 @@ def run_realtime_cycle():
         print(f"🌍 ENTORNO: [Sonido: {env.sound:.2f} | Amenaza: {env.threat:.2f} | Luz: {env.light:.2f}]")
         print(f"🧠 EMOCIÓN: [Estrés: {emotion.stress:.3f} | Arousal: {emotion.Arousal:.3f} | Valencia: {emotion.Valence:.3f}]")
         print(f"🧭 RUSSELL: {quadrant}")
+        print(f"💬 EMOCION DIFUSA: {str(dominant_emotion).upper()}")
         print(f"🤖 ACCIÓN:  >> {decision.upper()} <<  ({attitude})")
-        print(f"📊 TOP 2:   {top_1[0].upper()} ({top_1[1]:.2f}) vs {top_2[0].upper()} ({top_2[1]:.2f})")
+        print(f"📊 TOP 2 EMOCIONES: {top_1[0].upper()} ({top_1[1]:.2f}) vs {top_2[0].upper()} ({top_2[1]:.2f})")
 
         if REAL_TIME:
             time.sleep(TICK_SECONDS)
@@ -186,12 +216,13 @@ def run_realtime_cycle():
 
     if missing:
         print(f"Acciones no activadas: {', '.join(missing)}")
-        print(
-            "Nota: 'explore' requiere valence positiva y arousal medio/alto al mismo tiempo; "
-            "con los pesos actuales, ese cruce es raro en una dinamica natural."
-        )
     else:
         print("Se activaron todas las acciones objetivo.")
+
+    emotion_counts = Counter(seen_emotions)
+    print("=== Resumen de emociones difusas ===")
+    for emotion_name in sorted(emotion_counts.keys()):
+        print(f"  {emotion_name}: {emotion_counts[emotion_name]}")
 
     print("=== Cobertura Russell ===")
     for quadrant in sorted(TARGET_QUADRANTS):
@@ -202,7 +233,9 @@ def run_realtime_cycle():
     else:
         print("Se cubrieron los 4 cuadrantes del circumplejo de Russell.")
 
-    run_quadrant_probe(["normal", "cobarde", "valiente", "explorador", "superviviente"])
+    target_personalities = ["triste", "feliz", "miedosa", "calmada"]
+    run_quadrant_probe(target_personalities)
+    run_emotion_personality_probe(target_personalities)
 
     print("=== Fin del ciclo ===")
 

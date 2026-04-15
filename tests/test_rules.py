@@ -1,8 +1,9 @@
 from models.emotion import Emotion
 from models.environment import Environment
-from fuzzy.fuzzifier import fuzzify_arousal, fuzzify_valence
-from fuzzy.rules import evaluate_rules, normalize_actions
-from fuzzy.inference import choose_action
+from fuzzy.fuzzificacion import fuzzify_arousal, fuzzify_valence
+from fuzzy.inferencia import evaluate_rules
+from fuzzy.agregacion import aggregate_emotions, normalize_emotions, map_emotions_to_actions
+from fuzzy.desfuzzificacion import choose_emotion_max
 from controllers.personality_controller import load_personality
 
 
@@ -25,9 +26,9 @@ PARAMS = {
 
 EMOTION_STEPS = 10
 
-FUZZY_GENOME = load_personality("explorador")
+FUZZY_GENOME = load_personality("feliz")
 if not FUZZY_GENOME:
-    raise ValueError("No se encontro personalidad entrenada 'normal' en data/personalities.json")
+    raise ValueError("No se encontro personalidad entrenada 'feliz' en data/personalities.json")
 
 
 EMOTION_CASES = [
@@ -50,15 +51,17 @@ EMOTION_CASES = [
 
 
 FUZZY_CASES = [
-    ("flee", 0.9, 0.1),
-    ("hide", 0.5, 0.1),
-    ("idle_neg", 0.1, 0.1),
-    ("observe1", 0.9, 0.5),
-    ("observe2", 0.5, 0.5),
-    ("observe3", 0.1, 0.5),
-    ("explore1", 0.9, 0.9),
-    ("explore2", 0.5, 0.9),
-    ("idle_pos", 0.1, 0.9),
+    ("miedo", 0.9, 0.1),
+    ("tristeza", 0.1, 0.1),
+    ("felicidad", 0.8, 0.9),
+    ("calma", 0.1, 0.8),
+]
+
+PERSONALITY_CASES = [
+    "triste",
+    "feliz",
+    "miedosa",
+    "calmada",
 ]
 
 
@@ -123,14 +126,17 @@ def simulate_emotion_steps(environment, params, steps):
         emotion.update(environment, params)
         af = fuzzify_arousal(emotion.Arousal, FUZZY_GENOME)
         vf = fuzzify_valence(emotion.Valence, FUZZY_GENOME)
-        actions = normalize_actions(evaluate_rules(af, vf))
-        decision = choose_action(actions)
+        emotions = normalize_emotions(aggregate_emotions(evaluate_rules(af, vf)))
+        dominant_emotion = choose_emotion_max(emotions)
+        action_scores = map_emotions_to_actions(emotions)
+        decision = max(action_scores, key=action_scores.get)
 
         history.append({
             "step": step,
             "stress": emotion.stress,
             "arousal": emotion.Arousal,
             "valence": emotion.Valence,
+            "emotion": dominant_emotion,
             "decision": decision,
         })
 
@@ -173,16 +179,45 @@ def run_emotion_case(case_name, environment, params, steps=EMOTION_STEPS):
 def run_fuzzy_case(expected_rule, arousal, valence):
     af = fuzzify_arousal(arousal, FUZZY_GENOME)
     vf = fuzzify_valence(valence, FUZZY_GENOME)
-    actions = normalize_actions(evaluate_rules(af, vf))
-    decision = choose_action(actions)
+    emotions = normalize_emotions(aggregate_emotions(evaluate_rules(af, vf)))
+    dominant_emotion = choose_emotion_max(emotions)
+    actions = map_emotions_to_actions(emotions)
+    decision = max(actions, key=actions.get)
 
     print(f"Fuzzy case: {expected_rule}")
     print(f"  Input  -> Arousal={arousal:.2f}, Valence={valence:.2f}")
     print(f"  Af     -> {af}")
     print(f"  Vf     -> {vf}")
+    print(f"  Emotions-> {emotions}")
+    print(f"  Dominant-> {dominant_emotion}")
     print(f"  Actions-> {actions}")
     print(f"  Decide -> {decision}")
     print()
+
+
+def run_personality_emotion_comparison():
+    print("=== Personality emotional comparison ===")
+    scenario_env = Environment(sound=0.65, threat=0.40, light=0.75)
+
+    for personality_name in PERSONALITY_CASES:
+        p = load_personality(personality_name)
+        if not p:
+            print(f"  {personality_name}: no disponible")
+            continue
+
+        e = Emotion()
+        e.update(scenario_env, p)
+        af = fuzzify_arousal(e.Arousal, p)
+        vf = fuzzify_valence(e.Valence, p)
+        emotions = normalize_emotions(aggregate_emotions(evaluate_rules(af, vf)))
+        dominant_emotion = choose_emotion_max(emotions)
+        actions = map_emotions_to_actions(emotions)
+        decision = max(actions, key=actions.get)
+
+        print(
+            f"  {personality_name}: emotion={dominant_emotion}, "
+            f"decision={decision}, emotions={emotions}"
+        )
 
 
 if __name__ == "__main__":
@@ -190,6 +225,8 @@ if __name__ == "__main__":
     for case_name, environment in EMOTION_CASES:
         run_emotion_case(case_name, environment, PARAMS, EMOTION_STEPS)
 
-    # print("=== Fuzzy rule cases ===")
-    # for expected_rule, arousal, valence in FUZZY_CASES:
-    #     run_fuzzy_case(expected_rule, arousal, valence)
+    print("=== Fuzzy rule cases ===")
+    for expected_rule, arousal, valence in FUZZY_CASES:
+        run_fuzzy_case(expected_rule, arousal, valence)
+
+    run_personality_emotion_comparison()

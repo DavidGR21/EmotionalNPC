@@ -12,8 +12,7 @@ def get_attitude_from_decision(decision: str) -> str:
     """Mapea una acción difusa hacia un estado de actitud (Attitude Enum)."""
     mapping = {
         "flee": Attitude.PANICO,
-        "hide": Attitude.DEFENSIVO,
-        "observe": Attitude.ALERTA,
+        "dormir": Attitude.DEFENSIVO,
         "explore": Attitude.CURIOSO,
         "idle": Attitude.NEUTRAL,
     }

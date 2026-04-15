@@ -10,7 +10,7 @@ from train_ga import train_genetic_algorithm
 # CONFIGURACION EXPERIMENTAL
 # Ajusta estos valores cuando quieras escalar entrenamiento.
 # ==============================
-PERSONALITIES = ["normal", "cobarde", "valiente", "explorador", "superviviente"]
+PERSONALITIES = ["triste", "feliz", "miedosa", "calmada"]
 BEST_OF_N = 5
 POPULATION_SIZE = 80
 GENERATIONS = 50
