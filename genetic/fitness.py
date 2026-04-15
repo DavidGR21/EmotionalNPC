@@ -5,7 +5,7 @@ Este modulo mantiene la API publica esperada por train_ga.py:
     get_fitness_evaluator(personality_type)
 
 La implementacion interna fue separada por responsabilidades:
-- fitness_constants.py: constantes y pesos globales.
+- fitness_constants.py: constantes y caracteristicas globales.
 - fitness_regularization.py: regularizacion difusa y annealing.
 - fitness_components.py: componentes base (supervivencia y consistencia).
 - fitness_profiles.py: estrategias de personalidad (todas en un archivo).

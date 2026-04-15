@@ -44,7 +44,7 @@ MAX_ABS_COMPONENT_PER_TICK = {
     "personality": STRONG_IMPACT,
 }
 
-# Pesos de escalarizacion multiobjetivo.
+#  escalarizacion multiobjetivo.
 # Se prioriza personalidad (0.40), luego supervivencia (0.35),
 # y finalmente consistencia (0.25).
 COMPONENT_WEIGHTS = {

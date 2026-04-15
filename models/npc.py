@@ -7,7 +7,7 @@ class Npc:
     def __init__(self, name: str, params: dict, personality_type: str = "calmada"):
         self.name = name
         self.personality_type = personality_type
-        # El ADN neuronal (pesos genéticos para este NPC)
+        # El ADN neuronal (genes para este NPC)
         self.params = params
         # Atributos fisiológicos/psicológicos explícitos para trazabilidad del modelo.
         self.recepcion_sonoro = params.get("recepcion_sonoro", 0.0)

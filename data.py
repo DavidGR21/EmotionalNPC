@@ -3,7 +3,7 @@ import pandas as pd
 
 # 1. Definimos los límites (DNA_BOUNDS) según la documentación
 DNA_BOUNDS = {
-    # Pesos perceptuales semánticos (rango [0.0, 1.0])
+    # caracteristicas perceptuales semánticos (rango [0.0, 1.0])
     "recepcion_sonoro": (0.0, 1.0),
     "recepcion_amenaza": (0.0, 1.0),
     "recepcion_nivel_luz": (0.0, 1.0),

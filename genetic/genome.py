@@ -18,10 +18,10 @@ Resumen de decisiones:
 # DNA_BOUNDS define las "reglas de la física" de nuestro NPC.
 # Es un diccionario que le indica al algoritmo genético cuáles son los
 # valores mínimos y máximos que puede tomar cualquier parámetro.
-# Evita que el algoritmo cree NPCs que tengan pesos negativos (lo cual
+# Evita que el algoritmo cree NPCs que tengan caracteisticas negativos (lo cual
 # rompería la lógica difusa) o valores absurdamente grandes.
 DNA_BOUNDS = {
-    # 'w' son los Pesos de Percepción (qué tanto le importa X estímulo).
+    # 'w' son Percepción (qué tanto le importa X estímulo).
     # Rango de 0.0 (lo ignora completamente) a 1.0 (le afecta al máximo).
     "recepcion_sonoro": (0.0, 1.0),
     "recepcion_amenaza": (0.0, 1.0),
